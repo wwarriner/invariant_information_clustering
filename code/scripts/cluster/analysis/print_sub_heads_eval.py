@@ -17,11 +17,11 @@ def main():
   given_config = parser.parse_args()
 
   for model_ind in given_config.model_inds:
-    print("\n%d -------------------------------------------------" % model_ind)
+    print(("\n%d -------------------------------------------------" % model_ind))
 
     given_config.out_dir = os.path.join(given_config.out_root, str(model_ind))
     reloaded_config_path = os.path.join(given_config.out_dir, "config.pickle")
-    print("Loading restarting config from: %s" % reloaded_config_path)
+    print(("Loading restarting config from: %s" % reloaded_config_path))
     with open(reloaded_config_path, "rb") as config_f:
       config = pickle.load(config_f)
     assert (config.model_ind == model_ind)
@@ -31,7 +31,7 @@ def main():
 
     config.double_eval = False  # no double eval, not training (or saving config)
 
-    net = archs.__dict__[config.arch](config)
+    net = archs.__dict__[config.arch](config) # type: ignore
     model_path = os.path.join(config.out_dir, "best_net.pytorch")
     net.load_state_dict(
       torch.load(model_path, map_location=lambda storage, loc: storage))

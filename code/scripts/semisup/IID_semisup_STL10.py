@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import argparse
 import os
@@ -156,7 +156,7 @@ def main():
 
   # Model ----------------------------------------------------------------------
 
-  net_features = archs.__dict__[old_config.arch](old_config)
+  net_features = archs.__dict__[old_config.arch](old_config) # type: ignore
 
   if not config.restart:
     model_path = os.path.join(old_config.out_dir, "best_net.pytorch")
@@ -224,7 +224,7 @@ def main():
 
   # Train ----------------------------------------------------------------------
 
-  for e_i in xrange(start_epoch, config.num_epochs):
+  for e_i in range(start_epoch, config.num_epochs):
     net.train()
 
     if e_i in config.lr_schedule:

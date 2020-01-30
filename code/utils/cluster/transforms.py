@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import numpy as np
 import torch
@@ -47,6 +47,8 @@ def custom_cutout(min_box=None, max_box=None):
 def sobel_process(imgs, include_rgb, using_IR=False):
   bn, c, h, w = imgs.size()
 
+  rgb_imgs = None
+  ir_imgs = None
   if not using_IR:
     if not include_rgb:
       assert (c == 1)
@@ -69,24 +71,27 @@ def sobel_process(imgs, include_rgb, using_IR=False):
   sobel1 = np.array([[1, 0, -1], [2, 0, -2], [1, 0, -1]])
   conv1 = nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=1, bias=False)
   conv1.weight = nn.Parameter(
-    torch.Tensor(sobel1).cuda().float().unsqueeze(0).unsqueeze(0))
-  dx = conv1(Variable(grey_imgs)).data
+    torch.from_numpy(sobel1).cuda().float().unsqueeze(0).unsqueeze(0), requires_grad=True)
+  dx = conv1(grey_imgs).data
 
   sobel2 = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]])
   conv2 = nn.Conv2d(1, 1, kernel_size=3, stride=1, padding=1, bias=False)
   conv2.weight = nn.Parameter(
-    torch.from_numpy(sobel2).cuda().float().unsqueeze(0).unsqueeze(0))
-  dy = conv2(Variable(grey_imgs)).data
+    torch.from_numpy(sobel2).cuda().float().unsqueeze(0).unsqueeze(0), requires_grad=True)
+  dy = conv2(grey_imgs).data
 
   sobel_imgs = torch.cat([dx, dy], dim=1)
   assert (sobel_imgs.shape == (bn, 2, h, w))
 
   if not using_IR:
     if include_rgb:
+      assert rgb_imgs is not None
       sobel_imgs = torch.cat([rgb_imgs, sobel_imgs], dim=1)
       assert (sobel_imgs.shape == (bn, 5, h, w))
   else:
+    assert ir_imgs is not None
     if include_rgb:
+      assert rgb_imgs is not None
       # stick both rgb and ir back on in right order (sobel sandwiched inside)
       sobel_imgs = torch.cat([rgb_imgs, sobel_imgs, ir_imgs], dim=1)
     else:

@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import argparse
 import itertools
@@ -178,7 +178,7 @@ def train(render_count=-1):
   mapping_assignment_dataloader, mapping_test_dataloader = \
     cluster_twohead_create_dataloaders(config)
 
-  net = archs.__dict__[config.arch](config)
+  net = archs.__dict__[config.arch](config) # type: ignore
   if config.restart:
     model_path = os.path.join(config.out_dir, net_name)
     net.load_state_dict(
@@ -270,6 +270,7 @@ def train(render_count=-1):
 
   save_progression = hasattr(config, "save_progression") and \
                      config.save_progression
+  save_progression_count = None
   if save_progression:
     save_progression_count = 0
     save_progress(config, net, mapping_assignment_dataloader,
@@ -281,7 +282,7 @@ def train(render_count=-1):
   # Train
   # ------------------------------------------------------------------------
 
-  for e_i in xrange(next_epoch, config.num_epochs):
+  for e_i in range(next_epoch, config.num_epochs):
     print("Starting e_i: %d" % e_i)
 
     if e_i in config.lr_schedule:
@@ -299,6 +300,8 @@ def train(render_count=-1):
         epoch_loss = config.epoch_loss_head_B
         epoch_loss_no_lamb = config.epoch_loss_no_lamb_head_B
         lamb = config.lamb_B
+      else:
+        assert False
 
       avg_loss = 0.  # over heads and head_epochs (and sub_heads)
       avg_loss_no_lamb = 0.
@@ -310,7 +313,7 @@ def train(render_count=-1):
         iterators = (d for d in dataloaders)
 
         b_i = 0
-        for tup in itertools.izip(*iterators):
+        for tup in zip(*iterators):
           net.module.zero_grad()
 
           all_imgs = torch.zeros((config.batch_sz, config.in_channels,
@@ -322,7 +325,7 @@ def train(render_count=-1):
 
           imgs_curr = tup[0][0]  # always the first
           curr_batch_sz = imgs_curr.size(0)
-          for d_i in xrange(config.num_dataloaders):
+          for d_i in range(config.num_dataloaders):
             imgs_tf_curr = tup[1 + d_i][0]  # from 2nd to last
             assert (curr_batch_sz == imgs_tf_curr.size(0))
 
@@ -346,7 +349,7 @@ def train(render_count=-1):
 
           avg_loss_batch = None  # avg over the heads
           avg_loss_no_lamb_batch = None
-          for i in xrange(config.num_sub_heads):
+          for i in range(config.num_sub_heads):
             loss, loss_no_lamb = IID_loss(x_outs[i], x_tf_outs[i],
                                           lamb=lamb)
             if avg_loss_batch is None:
@@ -379,6 +382,7 @@ def train(render_count=-1):
           optimiser.step()
 
           if ((b_i % 50) == 0) and save_progression:
+            assert save_progression_count is not None
             save_progress(config, net, mapping_assignment_dataloader,
                           mapping_test_dataloader, save_progression_count,
                           sobel=False,

@@ -16,6 +16,9 @@ def doersch_set_patches(input_sz, patch_side):
 
   d_border = int(np.floor(patch_side / 2.0))
   d_border = np.array([d_border, d_border])
+  centre = None
+  other = None
+  position_gt = None
   found = False
   while not found:
     position_gt = np.random.choice(9)
@@ -41,6 +44,9 @@ def doersch_set_patches(input_sz, patch_side):
     # need to check it's actually not in the border too
     found = (other >= d_border).all() and (other < (img_sz - d_border)).all()
 
+  assert centre is not None
+  assert other is not None
+  assert position_gt is not None
   return centre, other, position_gt
 
 

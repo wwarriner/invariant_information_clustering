@@ -8,8 +8,9 @@ from code.utils.cluster.transforms import sobel_process
 
 def get_dlen(net_features, dataloader, include_rgb=None,
              penultimate_features=False):
-  for i, (imgs, _) in enumerate(dataloader):
-    imgs = Variable(sobel_process(imgs.cuda(), include_rgb)).cpu()
+  dlen = None
+  for imgs, _ in dataloader:
+    imgs = sobel_process(imgs.cuda(), include_rgb).cpu()
     x_features = net_features(imgs, trunk_features=True,
                               penultimate_features=penultimate_features)
 
@@ -17,6 +18,7 @@ def get_dlen(net_features, dataloader, include_rgb=None,
     dlen = x_features.shape[1]
     break
 
+  assert dlen is not None
   return dlen
 
 
@@ -24,8 +26,8 @@ def assess_acc(net, test_loader, gt_k=None, include_rgb=None,
                penultimate_features=False):
   correct = 0
   total = 0
-  for i, (imgs, targets) in enumerate(test_loader):
-    imgs = Variable(sobel_process(imgs.cuda(), include_rgb))
+  for imgs, targets in test_loader:
+    imgs = sobel_process(imgs.cuda(), include_rgb)
 
     with torch.no_grad():
       x_out = net(imgs, penultimate_features=penultimate_features)
@@ -48,8 +50,9 @@ def assess_acc_block(net, test_loader, gt_k=None, include_rgb=None,
   total = 0
   all = None
   all_targets = None
-  for i, (imgs, targets) in enumerate(test_loader):
-    imgs = Variable(sobel_process(imgs.cuda(), include_rgb))
+  dlen = None
+  for imgs, targets in test_loader:
+    imgs = sobel_process(imgs.cuda(), include_rgb)
 
     with torch.no_grad():
       x_out = net(imgs, penultimate_features=penultimate_features)
@@ -62,6 +65,7 @@ def assess_acc_block(net, test_loader, gt_k=None, include_rgb=None,
     all[total:(total + bn), :] = x_out.cpu().numpy()
     all_targets[total:(total + bn)] = targets.numpy()
     total += bn
+  assert dlen is not None
 
   # 40000
   all = all[:total, :]
@@ -83,8 +87,8 @@ def assess_acc_block(net, test_loader, gt_k=None, include_rgb=None,
   assert (preds.min() >= 0 and preds.max() < gt_k)
   assert (all_targets.min() >= 0 and all_targets.max() < gt_k)
   if not (preds.shape == all_targets.shape):
-    print(preds.shape)
-    print(all_targets.shape)
+    print((preds.shape))
+    print((all_targets.shape))
     assert (False)
 
   assert (preds.shape == (num_orig,))

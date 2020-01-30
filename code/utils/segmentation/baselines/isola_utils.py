@@ -31,10 +31,10 @@ def isola_loss(adjacent_pred, centre, other, adjacent_gt, mask, verbose=False,
   norm_factor = mask_per_pred.sum().item()
 
   if verbose:
-    print("kept %d out of %d" % (norm_factor, bn))
-    print(
+    print(("kept %d out of %d" % (norm_factor, bn)))
+    print((
       "if stricter, would have kept %d" % (
-      mask_centre * mask_other).sum().item())
+      mask_centre * mask_other).sum().item()))
     sysout.flush()
 
   # already passed through sigmoid
@@ -72,8 +72,8 @@ def isola_loss(adjacent_pred, centre, other, adjacent_gt, mask, verbose=False,
             torch.log(neg_adjacent_pred)).sum()
 
   if not np.isfinite(loss.cpu().item()):
-    print "Isola"
-    print loss
+    print("Isola")
+    print(loss)
     assert (False)
 
   return loss
@@ -93,6 +93,8 @@ def isola_set_patches(input_sz, patch_side):
   d_border = int(np.floor(patch_side / 2.0))
   d_border = np.array([d_border, d_border])
 
+  centre = None
+  other = None
   found = False
   while not found:
     # first patch. Start at least a patch_side and a half away from border
@@ -125,4 +127,6 @@ def isola_set_patches(input_sz, patch_side):
       # need to check it's actually not in the border too!
       found = (other >= d_border).all() and (other < (img_sz - d_border)).all()
 
+  assert centre is not None
+  assert other is not None
   return centre, other, adjacent

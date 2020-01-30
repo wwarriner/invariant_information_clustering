@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import sys
 from datetime import datetime
@@ -60,13 +60,15 @@ def _segmentation_get_data(config, net, dataloader, sobel=False,
 
   # vectorised
   flat_predss_all = [torch.zeros((num_batches * samples_per_batch),
-                                 dtype=torch.uint8).cuda() for _ in xrange(
+                                 dtype=torch.uint8).cuda() for _ in range(
     config.num_sub_heads)]
   flat_targets_all = torch.zeros((num_batches * samples_per_batch),
                                  dtype=torch.uint8).cuda()
   mask_all = torch.zeros((num_batches * samples_per_batch),
                          dtype=torch.uint8).cuda()
 
+  batch_start = None
+  all_start = None
   if verbose > 0:
     batch_start = datetime.now()
     all_start = batch_start
@@ -94,7 +96,7 @@ def _segmentation_get_data(config, net, dataloader, sobel=False,
 
     # vectorise: collapse from 2D to 1D
     start_i = b_i * samples_per_batch
-    for i in xrange(config.num_sub_heads):
+    for i in range(config.num_sub_heads):
       x_outs_curr = x_outs[i]
       assert (not x_outs_curr.requires_grad)
       flat_preds_curr = torch.argmax(x_outs_curr, dim=1)
@@ -106,6 +108,7 @@ def _segmentation_get_data(config, net, dataloader, sobel=False,
     mask_all[start_i:(start_i + actual_samples_curr)] = mask.view(-1)
 
     if verbose > 0 and b_i < 3:
+      assert batch_start is not None
       batch_finish = datetime.now()
       print("finished batch %d, %s, took %s, of %d" %
             (b_i, batch_finish, batch_finish - batch_start, num_batches))
@@ -113,18 +116,19 @@ def _segmentation_get_data(config, net, dataloader, sobel=False,
       sys.stdout.flush()
 
   if verbose > 0:
+    assert all_start is not None
     all_finish = datetime.now()
     print(
       "finished all batches %s, took %s" % (all_finish, all_finish - all_start))
     sys.stdout.flush()
 
   flat_predss_all = [flat_predss_all[i][:num_samples] for i in
-                     xrange(config.num_sub_heads)]
+                     range(config.num_sub_heads)]
   flat_targets_all = flat_targets_all[:num_samples]
   mask_all = mask_all[:num_samples]
 
   flat_predss_all = [flat_predss_all[i].masked_select(mask=mask_all) for i in
-                     xrange(config.num_sub_heads)]
+                     range(config.num_sub_heads)]
   flat_targets_all = flat_targets_all.masked_select(mask=mask_all)
 
   if verbose > 0:

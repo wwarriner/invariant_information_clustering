@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import argparse
 import itertools
@@ -23,7 +23,7 @@ from code.utils.cluster.IID_losses import IID_loss
 
 """
   Semisupervised overclustering ("IIC+" = "IID+")
-  Note network is trained entirely unsupervised, as labels are found for 
+  Note network is trained entirely unsupervised, as labels are found for
   evaluation only and do not affect the network.
   Train and test script (greyscale datasets).
   Network has one output head only.
@@ -124,6 +124,8 @@ if "MNIST" == config.dataset:
 if not os.path.exists(config.out_dir):
   os.makedirs(config.out_dir)
 
+net_name = None
+opt_name = None
 if config.restart:
   config_name = "config.pickle"
   net_name = "latest_net.pytorch"
@@ -154,8 +156,9 @@ else:
 dataloaders, mapping_assignment_dataloader, mapping_test_dataloader = \
   cluster_create_dataloaders(config)
 
-net = archs.__dict__[config.arch](config)
+net = archs.__dict__[config.arch](config) # type: ignore
 if config.restart:
+  assert net_name is not None
   model_path = os.path.join(config.out_dir, net_name)
   net.load_state_dict(
     torch.load(model_path, map_location=lambda storage, loc: storage))
@@ -166,6 +169,7 @@ net.train()
 
 optimiser = get_opt(config.opt)(net.module.parameters(), lr=config.lr)
 if config.restart:
+  assert opt_name is not None
   print("loading latest opt")
   optimiser.load_state_dict(
     torch.load(os.path.join(config.out_dir, opt_name)))
@@ -206,7 +210,7 @@ fig, axarr = plt.subplots(4, sharex=False, figsize=(20, 20))
 
 # Train ------------------------------------------------------------------------
 
-for e_i in xrange(next_epoch, config.num_epochs):
+for e_i in range(next_epoch, config.num_epochs):
   print("Starting e_i: %d" % e_i)
   sys.stdout.flush()
 
@@ -221,7 +225,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
   avg_loss_no_lamb = 0.
   avg_loss_count = 0
 
-  for tup in itertools.izip(*iterators):
+  for tup in zip(*iterators):
     net.module.zero_grad()
 
     all_imgs = torch.zeros(config.batch_sz, config.in_channels,
@@ -233,7 +237,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
 
     imgs_curr = tup[0][0]  # always the first
     curr_batch_sz = imgs_curr.size(0)
-    for d_i in xrange(config.num_dataloaders):
+    for d_i in range(config.num_dataloaders):
       imgs_tf_curr = tup[1 + d_i][0]  # from 2nd to last
       assert (curr_batch_sz == imgs_tf_curr.size(0))
 
@@ -256,7 +260,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
 
     avg_loss_batch = None  # avg over the heads
     avg_loss_no_lamb_batch = None
-    for i in xrange(config.num_sub_heads):
+    for i in range(config.num_sub_heads):
       loss, loss_no_lamb = IID_loss(x_outs[i], x_tf_outs[i], lamb=config.lamb)
       if avg_loss_batch is None:
         avg_loss_batch = loss

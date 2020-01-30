@@ -44,16 +44,18 @@ for model_ind in given_config.model_inds:
   elif config.dataset == "Potsdam":
     dataloaders, mapping_assignment_dataloader, mapping_test_dataloader = \
       make_Potsdam_dataloaders(config)
+  else:
+    assert False
 
   counts = np.zeros(config.gt_k)
 
   # count classes in mapping_assign dataloader
   for b_i, batch in enumerate(mapping_assignment_dataloader):
     imgs, flat_targets, mask = batch
-    for c in xrange(config.gt_k):
+    for c in range(config.gt_k):
       counts[c] += ((flat_targets == c) * mask).sum().item()
 
   print("counts")
   print(counts)
   print("proportions")
-  print(counts / counts.sum())
+  print((counts / counts.sum()))

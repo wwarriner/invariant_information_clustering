@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import argparse
 import os
@@ -193,7 +193,8 @@ dataloader = dataloaders[0]
 
 # networks and optimisers ------------------------------------------------------
 
-net = archs.__dict__[config.arch](config)
+net = archs.__dict__[config.arch](config) # type: ignore
+choose_best = None
 if config.restart:
   model_path = os.path.join(config.out_dir, "latest_net.pytorch")
   choose_best = False
@@ -208,6 +209,7 @@ net = torch.nn.DataParallel(net)
 
 optimiser = get_opt(config.opt)(net.module.parameters(), lr=config.lr)
 if config.restart:
+  assert choose_best is not None
   if not choose_best:
     optimiser.load_state_dict(
       torch.load(os.path.join(config.out_dir, "latest_optimiser.pytorch")))
@@ -256,7 +258,7 @@ fig, axarr = plt.subplots(3, sharex=False, figsize=(20, 20))
 
 crossent = torch.nn.CrossEntropyLoss(reduction="none").cuda()
 
-for e_i in xrange(next_epoch, config.num_epochs):
+for e_i in range(next_epoch, config.num_epochs):
   torch.cuda.empty_cache()
 
   net.module.train()
@@ -334,7 +336,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
   axarr[1].set_title("ACC")
 
   axarr[2].clear()
-  for c in xrange(config.gt_k):
+  for c in range(config.gt_k):
     axarr[2].plot(config.epoch_masses[:, c])
   axarr[2].set_title("Masses (reordered)")
 

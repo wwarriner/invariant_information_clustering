@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import argparse
 import itertools
@@ -21,7 +21,7 @@ from code.utils.cluster.baselines.triplets import make_triplets_data, \
 
 """
   Triplets.
-  Makes output distribution same as that of attractor, and different to that 
+  Makes output distribution same as that of attractor, and different to that
   of repeller.
   Greyscale version (no sobel).
 """
@@ -135,7 +135,8 @@ dataloader_test = make_triplets_data(config)
 train_dataloaders = [dataloader_original, dataloader_positive,
                      dataloader_negative]
 
-net = archs.__dict__[config.arch](config)
+net = archs.__dict__[config.arch](config) # type: ignore
+taking_best = None
 if config.restart:
   model_path = os.path.join(config.out_dir, "latest_net.pytorch")
   taking_best = not os.path.exists(model_path)
@@ -152,6 +153,7 @@ net.train()
 optimiser = get_opt(config.opt)(net.module.parameters(), lr=config.lr)
 if config.restart:
   opt_path = os.path.join(config.out_dir, "latest_optimiser.pytorch")
+  assert taking_best is not None
   if taking_best:
     opt_path = os.path.join(config.out_dir, "best_optimiser.pytorch")
     optimiser.load_state_dict(torch.load(opt_path))
@@ -159,6 +161,7 @@ if config.restart:
 # Results storage --------------------------------------------------------------
 
 if config.restart:
+  assert taking_best is not None
   if not taking_best:
     next_epoch = config.last_epoch + 1  # corresponds to last saved model
   else:
@@ -188,7 +191,7 @@ fig, axarr = plt.subplots(4, sharex=False, figsize=(20, 20))
 
 # Train ------------------------------------------------------------------------
 
-for e_i in xrange(next_epoch, config.num_epochs):
+for e_i in range(next_epoch, config.num_epochs):
   print("Starting e_i: %d" % (e_i))
 
   if e_i in config.lr_schedule:
@@ -202,7 +205,7 @@ for e_i in xrange(next_epoch, config.num_epochs):
   iterators = (d for d in train_dataloaders)
 
   b_i = 0
-  for tup in itertools.izip(*iterators):
+  for tup in zip(*iterators):
     net.module.zero_grad()
 
     imgs_orig = tup[0][0].cuda()
@@ -258,12 +261,12 @@ for e_i in xrange(next_epoch, config.num_epochs):
   axarr[1].set_title("Loss")
 
   axarr[2].clear()
-  for c in xrange(config.gt_k):
+  for c in range(config.gt_k):
     axarr[2].plot(config.masses[:, c])
   axarr[2].set_title("masses")
 
   axarr[3].clear()
-  for c in xrange(config.gt_k):
+  for c in range(config.gt_k):
     axarr[3].plot(config.per_class_acc[:, c])
   axarr[3].set_title("per_class_acc")
 

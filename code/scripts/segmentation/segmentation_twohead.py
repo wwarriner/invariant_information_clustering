@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import argparse
 import itertools
@@ -138,6 +138,7 @@ set_segmentation_input_channels(config)
 if not os.path.exists(config.out_dir):
   os.makedirs(config.out_dir)
 
+dict_name = None
 if config.restart:
   config_name = "config.pickle"
   dict_name = "latest.pytorch"
@@ -164,8 +165,10 @@ def train():
     segmentation_create_dataloaders(config)
   dataloaders_head_B = dataloaders_head_A  # unlike for clustering datasets
 
-  net = archs.__dict__[config.arch](config)
+  net = archs.__dict__[config.arch](config) # type: ignore
+  dict = None
   if config.restart:
+    assert dict_name is not None
     dict = torch.load(os.path.join(config.out_dir, dict_name),
                       map_location=lambda storage, loc: storage)
     net.load_state_dict(dict["net"])
@@ -175,6 +178,7 @@ def train():
 
   optimiser = get_opt(config.opt)(net.module.parameters(), lr=config.lr)
   if config.restart:
+    assert dict is not None
     optimiser.load_state_dict(dict["optimiser"])
 
   heads = ["A", "B"]
@@ -232,7 +236,7 @@ def train():
   # Train
   # ------------------------------------------------------------------------
 
-  for e_i in xrange(next_epoch, config.num_epochs):
+  for e_i in range(next_epoch, config.num_epochs):
     print("Starting e_i: %d %s" % (e_i, datetime.now()))
     sys.stdout.flush()
 
@@ -246,12 +250,13 @@ def train():
         epoch_loss = config.epoch_loss_head_A
         epoch_loss_no_lamb = config.epoch_loss_no_lamb_head_A
         lamb = config.lamb_A
-
       elif head == "B":
         dataloaders = dataloaders_head_B
         epoch_loss = config.epoch_loss_head_B
         epoch_loss_no_lamb = config.epoch_loss_no_lamb_head_B
         lamb = config.lamb_B
+      else:
+        assert False
 
       iterators = (d for d in dataloaders)
       b_i = 0
@@ -259,7 +264,7 @@ def train():
       avg_loss_no_lamb = 0.
       avg_loss_count = 0
 
-      for tup in itertools.izip(*iterators):
+      for tup in zip(*iterators):
         net.module.zero_grad()
 
         if not config.no_sobel:
@@ -279,7 +284,7 @@ def train():
                                     config.input_sz).to(torch.float32).cuda()
 
         curr_batch_sz = tup[0][0].shape[0]
-        for d_i in xrange(config.num_dataloaders):
+        for d_i in range(config.num_dataloaders):
           img1, img2, affine2_to_1, mask_img1 = tup[d_i]
           assert (img1.shape[0] == curr_batch_sz)
 
@@ -314,7 +319,7 @@ def train():
         avg_loss_batch = None  # avg over the heads
         avg_loss_no_lamb_batch = None
 
-        for i in xrange(config.num_sub_heads):
+        for i in range(config.num_sub_heads):
           loss, loss_no_lamb = loss_fn(x1_outs[i],
                                        x2_outs[i],
                                        all_affine2_to_1=all_affine2_to_1,

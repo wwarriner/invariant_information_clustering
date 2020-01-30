@@ -49,6 +49,8 @@ class TripletsNet6cHead(nn.Module):
       features_sp_size = 3
     elif config.input_sz == 64:
       features_sp_size = 8
+    else:
+      assert False
 
     # no softmax, done in loss
     self.head = nn.Linear(num_features * features_sp_size * features_sp_size,

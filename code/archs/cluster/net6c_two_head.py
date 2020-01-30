@@ -1,7 +1,7 @@
 import torch.nn as nn
 
-from net6c import ClusterNet6c, ClusterNet6cTrunk
-from vgg import VGGNet
+from .net6c import ClusterNet6c, ClusterNet6cTrunk
+from .vgg import VGGNet
 
 __all__ = ["ClusterNet6cTwoHead"]
 
@@ -21,6 +21,8 @@ class ClusterNet6cTwoHeadHead(nn.Module):
       features_sp_size = 3
     elif config.input_sz == 64:
       features_sp_size = 8
+    else:
+      assert False
 
     if not semisup:
       self.num_sub_heads = config.num_sub_heads
@@ -30,7 +32,7 @@ class ClusterNet6cTwoHeadHead(nn.Module):
       # include softmax
       self.heads = nn.ModuleList([nn.Sequential(
         nn.Linear(num_features * features_sp_size * features_sp_size, output_k),
-        nn.Softmax(dim=1)) for _ in xrange(self.num_sub_heads)])
+        nn.Softmax(dim=1)) for _ in range(self.num_sub_heads)])
     else:
       self.head = nn.Linear(num_features * features_sp_size * features_sp_size,
                             output_k)
@@ -39,7 +41,7 @@ class ClusterNet6cTwoHeadHead(nn.Module):
 
     if not self.semisup:
       results = []
-      for i in xrange(self.num_sub_heads):
+      for i in range(self.num_sub_heads):
         if kmeans_use_features:
           results.append(x)  # duplicates
         else:
@@ -65,7 +67,7 @@ class ClusterNet6cTwoHead(VGGNet):
 
     semisup = (hasattr(config, "semisup") and
                config.semisup)
-    print("semisup: %s" % semisup)
+    print(("semisup: %s" % semisup))
 
     self.head_B = ClusterNet6cTwoHeadHead(config, output_k=config.output_k_B,
                                           semisup=semisup)

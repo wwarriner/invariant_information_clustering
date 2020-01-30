@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import argparse
 import pickle
@@ -61,7 +61,7 @@ dataloaders_head_A, mapping_assignment_dataloader, mapping_test_dataloader = \
   segmentation_create_dataloaders(old_config)
 dataloaders_head_B = dataloaders_head_A  # unlike for clustering datasets
 
-net = archs.__dict__[old_config.arch](old_config)
+net = archs.__dict__[old_config.arch](old_config) # type: ignore
 
 net_state = torch.load(os.path.join(old_config.out_dir, "best_net.pytorch"),
                        map_location=lambda storage, loc: storage)
@@ -75,6 +75,7 @@ stats_dict = segmentation_eval(old_config, net,
                                sobel=(not old_config.no_sobel),
                                using_IR=old_config.using_IR,
                                return_only=True)
+assert isinstance(stats_dict, dict)
 
 acc = stats_dict["best"]
 

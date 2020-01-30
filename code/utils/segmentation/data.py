@@ -56,28 +56,28 @@ def segmentation_create_dataloaders(config):
 
 
 def make_Coco_dataloaders(config):
-  dataloaders = _create_dataloaders(config, cocostuff.__dict__[config.dataset])
+  dataloaders = _create_dataloaders(config, cocostuff.__dict__[config.dataset]) # type: ignore
 
   mapping_assignment_dataloader = \
-    _create_mapping_loader(config, cocostuff.__dict__[config.dataset],
+    _create_mapping_loader(config, cocostuff.__dict__[config.dataset], # type: ignore
                            partitions=config.mapping_assignment_partitions)
 
   mapping_test_dataloader = \
-    _create_mapping_loader(config, cocostuff.__dict__[config.dataset],
+    _create_mapping_loader(config, cocostuff.__dict__[config.dataset], # type: ignore
                            partitions=config.mapping_test_partitions)
 
   return dataloaders, mapping_assignment_dataloader, mapping_test_dataloader
 
 
 def make_Potsdam_dataloaders(config):
-  dataloaders = _create_dataloaders(config, potsdam.__dict__[config.dataset])
+  dataloaders = _create_dataloaders(config, potsdam.__dict__[config.dataset]) # type: ignore
 
   mapping_assignment_dataloader = \
-    _create_mapping_loader(config, potsdam.__dict__[config.dataset],
+    _create_mapping_loader(config, potsdam.__dict__[config.dataset], # type: ignore
                            partitions=config.mapping_assignment_partitions)
 
   mapping_test_dataloader = \
-    _create_mapping_loader(config, potsdam.__dict__[config.dataset],
+    _create_mapping_loader(config, potsdam.__dict__[config.dataset], # type: ignore
                            partitions=config.mapping_test_partitions)
 
   return dataloaders, mapping_assignment_dataloader, mapping_test_dataloader
@@ -88,9 +88,9 @@ def _create_dataloaders(config, dataset_class):
   # need the matrix relation between them
   dataloaders = []
   do_shuffle = (config.num_dataloaders == 1)
-  for d_i in xrange(config.num_dataloaders):
-    print("Creating paired dataloader %d out of %d time %s" %
-          (d_i, config.num_dataloaders, datetime.now()))
+  for d_i in range(config.num_dataloaders):
+    print(("Creating paired dataloader %d out of %d time %s" %
+          (d_i, config.num_dataloaders, datetime.now())))
     sys.stdout.flush()
 
     train_imgs_list = []
@@ -119,8 +119,8 @@ def _create_dataloaders(config, dataset_class):
     dataloaders.append(train_dataloader)
 
   num_train_batches = len(dataloaders[0])
-  print("Length of paired datasets vector %d" % len(dataloaders))
-  print("Number of batches per epoch: %d" % num_train_batches)
+  print(("Length of paired datasets vector %d" % len(dataloaders)))
+  print(("Number of batches per epoch: %d" % num_train_batches))
   sys.stdout.flush()
 
   return dataloaders
