@@ -56,8 +56,7 @@ parser.add_argument("--batch_sz", type=int, default=240)  # num pairs
 parser.add_argument("--num_dataloaders", type=int, default=3)
 parser.add_argument("--num_sub_heads", type=int, default=5)
 
-parser.add_argument("--out_root", type=str,
-                    default="/scratch/shared/slow/xuji/iid_private")
+parser.add_argument("--out_root", type=str)
 parser.add_argument("--restart", dest="restart", default=False,
                     action="store_true")
 parser.add_argument("--restart_from_best", dest="restart_from_best",
@@ -130,6 +129,7 @@ assert (config.output_k_A >= config.gt_k)
 config.eval_mode = "hung"
 
 assert ("MNIST" == config.dataset)
+torchvision.datasets.MNIST(root=config.dataset_root, download=True)
 dataset_class = torchvision.datasets.MNIST
 config.train_partitions = [True, False]
 config.mapping_assignment_partitions = [True, False]
