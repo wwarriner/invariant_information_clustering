@@ -1,0 +1,18 @@
+name: invariant_information_clustering
+channels:
+    - defaults
+    - anaconda
+    - conda-forge
+    - pytorch
+dependencies:
+    - python=2.7.5
+    - pytorch=0.4.1
+    - torchvision=0.2.1
+    - scikit-learn=0.20.0
+    - pip
+    pip:
+        - scikit-image=0.14.0
+        - opencv-python=3.4.3.18
+        - opencv-contrib-python=3.4.1.15
+        - PyYAML=3.10
+        - tqdm=4.19.9
