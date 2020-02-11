@@ -102,3 +102,12 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+/datasets/*
+/datasets/**/*
+!/datasets/README.txt
+!/datasets/setup_cocostuff164k.sh
+
+/out/**/*
+**/*.out
+**/*.err
