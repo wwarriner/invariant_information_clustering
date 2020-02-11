@@ -12,7 +12,7 @@ dependencies:
     - tqdm=4.42.0
     - pip=19.3.1
     - pip:
-          - pytorch=1.4.0
-          - torchvision=0.5.0
-          - opencv-python=4.1.2.30
-          - libtiff=0.4.2
+          - torch==1.4.0
+          - torchvision==0.5.0
+          - opencv-python==4.1.2.30
+          - libtiff==0.4.2
