@@ -43,9 +43,7 @@ parser.add_argument("--dataset_root", type=str, required=True)
 
 parser.add_argument("--use_coarse_labels", default=False,
                     action="store_true")  # COCO, Potsdam
-parser.add_argument("--fine_to_coarse_dict", type=str,  # COCO
-                    default="/users/xuji/iid/iid_private/code/datasets"
-                            "/segmentation/util/out/fine_to_coarse_dict.pickle")
+parser.add_argument("--fine_to_coarse_dict", type=str, required=True) # COCO
 parser.add_argument("--include_things_labels", default=False,
                     action="store_true")  # COCO
 parser.add_argument("--incl_animal_things", default=False,
@@ -72,8 +70,7 @@ parser.add_argument("--batch_sz", type=int, required=True)  # num pairs
 parser.add_argument("--num_dataloaders", type=int, default=3)
 parser.add_argument("--num_sub_heads", type=int, default=5)
 
-parser.add_argument("--out_root", type=str,
-                    default="/scratch/shared/slow/xuji/iid_private")
+parser.add_argument("--out_root", type=str)
 parser.add_argument("--restart", default=False, action="store_true")
 
 parser.add_argument("--save_freq", type=int, default=5)
@@ -240,17 +237,22 @@ def train():
     print("Starting e_i: %d %s" % (e_i, datetime.now()))
     sys.stdout.flush()
 
+    print("Checking lr_schedule")
     if e_i in config.lr_schedule:
+      print("  is in schedule!")
       optimiser = update_lr(optimiser, lr_mult=config.lr_mult)
 
+    print("Head loop")
     for head_i in range(2):
       head = heads[head_i]
       if head == "A":
+        print("  Head A")
         dataloaders = dataloaders_head_A
         epoch_loss = config.epoch_loss_head_A
         epoch_loss_no_lamb = config.epoch_loss_no_lamb_head_A
         lamb = config.lamb_A
       elif head == "B":
+        print("  Head B")
         dataloaders = dataloaders_head_B
         epoch_loss = config.epoch_loss_head_B
         epoch_loss_no_lamb = config.epoch_loss_no_lamb_head_B
@@ -264,6 +266,8 @@ def train():
       avg_loss_no_lamb = 0.
       avg_loss_count = 0
 
+      print("  tup loop")
+      print("  ", len(list(zip(*iterators))))
       for tup in zip(*iterators):
         net.module.zero_grad()
 
@@ -282,6 +286,7 @@ def train():
           torch.float32).cuda()
         all_mask_img1 = torch.zeros(config.batch_sz, config.input_sz,
                                     config.input_sz).to(torch.float32).cuda()
+        print("    initialized")
 
         curr_batch_sz = tup[0][0].shape[0]
         for d_i in range(config.num_dataloaders):
@@ -296,6 +301,7 @@ def train():
           all_affine2_to_1[actual_batch_start:actual_batch_end, :,
           :] = affine2_to_1
           all_mask_img1[actual_batch_start:actual_batch_end, :, :] = mask_img1
+        print("    finished with dataloader loop")
 
         if not (curr_batch_sz == config.dataloader_batch_sz) and (
             e_i == next_epoch):
@@ -306,6 +312,7 @@ def train():
         all_img2 = all_img2[:curr_total_batch_sz, :, :, :]
         all_affine2_to_1 = all_affine2_to_1[:curr_total_batch_sz, :, :]
         all_mask_img1 = all_mask_img1[:curr_total_batch_sz, :, :]
+        print("    subsetting finished")
 
         if (not config.no_sobel):
           all_img1 = sobel_process(all_img1, config.include_rgb,
@@ -338,8 +345,9 @@ def train():
 
         avg_loss_batch /= config.num_sub_heads
         avg_loss_no_lamb_batch /= config.num_sub_heads
+        print("    finished loss")
 
-        if ((b_i % 100) == 0) or (e_i == next_epoch):
+        if ((b_i % 1) == 0) or (e_i == next_epoch):
           print(
             "Model ind %d epoch %d head %s batch: %d avg loss %f avg loss no "
             "lamb %f "

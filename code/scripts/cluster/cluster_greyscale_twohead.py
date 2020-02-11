@@ -37,8 +37,7 @@ parser.add_argument("--opt", type=str, default="Adam")
 parser.add_argument("--mode", type=str, default="IID")
 
 parser.add_argument("--dataset", type=str, default="MNIST")
-parser.add_argument("--dataset_root", type=str,
-                    default="/scratch/local/ssd/xuji/MNIST")
+parser.add_argument("--dataset_root", type=str)
 
 parser.add_argument("--gt_k", type=int, default=10)
 parser.add_argument("--output_k_A", type=int, required=True)
